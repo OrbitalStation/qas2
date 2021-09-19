@@ -5,6 +5,6 @@ authors = ["Roman <romann.tarasenko@gmail.com>"]
 edition = "2018"
 
 [lib]
-# proc-macro = true
+proc-macro = true
 
 [dependencies]

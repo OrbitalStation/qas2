@@ -1,7 +1,4 @@
-use super::super::{
-    Let,
-    types::TypeID
-};
+use super::super::{types::TypeID, Let};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u8)]
@@ -12,7 +9,7 @@ pub enum Fix {
     Prefix,
 
     /// a <op> (e.g. a-)
-    Postfix
+    Postfix,
 }
 
 #[allow(dead_code)]
@@ -23,22 +20,22 @@ pub enum Order {
     Left,
 
     /// a <op> b <op> c == a <op> (b <op> c)
-    Right
+    Right,
 }
 
 pub struct Op {
-    pub operands: Vec <TypeID>,
+    pub operands: Vec<TypeID>,
     pub ret: TypeID,
-    pub parts: Vec <String>,
+    pub parts: Vec<String>,
     pub fix: Fix,
     pub order: Order,
     pub priority: u8,
-    pub make: fn(&Vec <&Let>) -> String
+    pub make: fn(&Vec<&Let>) -> String,
 }
 
 impl Op {
-    pub fn ops() -> &'static mut Vec <Op> {
-        static mut OPS: Vec <Op> = Vec::new();
+    pub fn ops() -> &'static mut Vec<Op> {
+        static mut OPS: Vec<Op> = Vec::new();
 
         unsafe { &mut OPS }
     }
@@ -48,33 +45,32 @@ impl Op {
         while i < Self::ops().len() {
             if Self::ops()[i].priority < op.priority {
                 Self::ops().insert(i, op);
-                return
+                return;
             }
             i += 1
         }
         Self::ops().push(op)
-
     }
 }
 
 #[derive(Debug, Clone)]
-pub enum Operand <'a> {
+pub enum Operand<'a> {
     Let(&'a Let),
-    Expr(Let)
+    Expr(Let),
 }
 
-impl <'a> Operand <'a> {
+impl<'a> Operand<'a> {
     pub fn ty(&self) -> TypeID {
         match self {
             Self::Let(x) => x.ty,
-            Self::Expr(x) => x.ty
+            Self::Expr(x) => x.ty,
         }
     }
 
     pub fn as_let(&self) -> &Let {
         match self {
             Self::Let(x) => x,
-            Self::Expr(x) => x
+            Self::Expr(x) => x,
         }
     }
 }
@@ -82,5 +78,5 @@ impl <'a> Operand <'a> {
 #[derive(Debug, Clone)]
 pub struct Operator {
     pub data: String,
-    pub fix: Fix
+    pub fix: Fix,
 }

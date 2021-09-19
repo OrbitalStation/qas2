@@ -1,14 +1,6 @@
-#define true 1
-#define false 0
+#include "ty.h"
+#include "ty.h"
 
-#define AAA
-
-typedef _Bool bool;
-
-#ifdef AAA
-
-bool and(bool a, bool b) {
+bool sqr(bool a, bool b) {
     return a && b;
 }
-
-#endif

@@ -6,6 +6,8 @@ macro_rules! token {
             $($($ord,)*)?
             $($($str(String),)*)?
             $($($ordstr,)*)?
+            Unknown(char),
+            String(String)
         }
 
         impl core::fmt::Display for Token {
@@ -16,6 +18,8 @@ macro_rules! token {
                     $($(Self::$ord => f.write_char($ord_v),)*)?
                     $($(Self::$str(x) => f.write_str(x),)*)?
                     $($(Self::$ordstr => f.write_str($ordstr_v),)*)?
+                    Self::Unknown(c) => f.write_char(*c),
+                    Self::String(s) => write!(f, "\"{}\"", s)
                 }
             }
         }
@@ -84,7 +88,7 @@ macro_rules! token {
                                 ignored += 1;
                                 flush(&mut vec, &mut buf, &mut ty)
                             } else {
-                                panic!("unknown symbol: `{}`", c)
+                                push(&mut vec, &mut buf, Token::Unknown(c), &mut ty)
                             }
                         }
                     }
@@ -93,7 +97,7 @@ macro_rules! token {
             }
             flush(&mut vec, &mut buf, &mut ty);
 
-
+            merge_strings(&mut vec);
 
             vec
         }
@@ -119,10 +123,9 @@ fn add(vec: &mut Vec <Token>, buf: &mut String, ty: &mut TokenStr, c: char, ty2:
     }
 }
 
-fn flush(vec: &mut Vec <Token>, buf: &mut String, ty: &mut TokenStr) {
+fn flush(vec: &mut Vec<Token>, buf: &mut String, ty: &mut TokenStr) {
     if !buf.is_empty() {
         vec.push(ty.to_token(buf));
-        *ty = TokenStr::No;
         buf.clear()
     }
 }
@@ -151,6 +154,7 @@ token! {
         Newline         = '\n',
         Hashtag         = '#',
         Ampersand       = '&',
+        DoubleQuote     = '"',
 
     'str:
         Name = |c: char, ty| alphabetic(c) || (ty == TokenStr::Name && c.is_numeric()),
@@ -164,4 +168,33 @@ token! {
             if c == ' ' && ignored == 4 { Ok(Token::Tab) }
             else { Err(c.is_whitespace()) }
         }
+}
+
+pub fn merge_strings(tokens: &mut Vec<Token>) -> Option <()> {
+    let mut i = 0;
+    'outer: loop {
+        let x = tokens.get(i);
+        match x {
+            Some(x) => match x {
+                Token::DoubleQuote => {
+                    let i_c = i;
+                    let mut s = String::new();
+                    tokens.remove(i);
+                    loop {
+                        if i >= tokens.len() { return None }
+                        let c = tokens.remove(i);
+                        if c == Token::DoubleQuote {
+                            //tokens.remove(i);
+                            tokens[i_c] = Token::String(s);
+                            continue 'outer;
+                        }
+                        s.push_str(c.to_string().as_str());
+                    }
+                }
+                _ => (),
+            },
+            None => break Some(()),
+        }
+        i += 1
+    }
 }

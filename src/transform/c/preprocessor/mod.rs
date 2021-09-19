@@ -28,7 +28,7 @@ impl SystemPath {
     }
 }
 
-pub fn preprocess(paths: Vec <SystemPath>) -> Option <()> {
+pub fn preprocess(_paths: Vec <SystemPath>) -> Option <()> {
     let mut it = SmartIter::new();
     let mut was_hashtag = false;
 
@@ -38,7 +38,9 @@ pub fn preprocess(paths: Vec <SystemPath>) -> Option <()> {
                 Token::Name(name) => if let Some(m) = Macro::macros().iter().find(|x: &&Macro| &x.name == name) {
                     if !was_hashtag {
                         Code::code().remove(it.pos());
-                        for token in m.data.iter().rev() { Code::code().insert(it.pos(), token.clone()) }
+                        for token in m.data.iter().rev() {
+                            Code::code().insert(it.pos(), token.clone())
+                        }
                     }
                 },
                 Token::Hashtag => {
@@ -64,12 +66,26 @@ pub fn preprocess(paths: Vec <SystemPath>) -> Option <()> {
                                 },
                                 "ifdef" => if_directive(&mut it, ifdef)?,
                                 "ifndef" => if_directive(&mut it, |tokens| !ifdef(tokens))?,
-                                "include" => {
-                                    
+                                "include" => match it.next()? {
+                                    Token::String(path) => {
+                                        if path.chars().last().expect("path should not be empty") == '/' { panic!("cannot include directory") }
+                                        let path = if path.chars().next().expect("path should not be empty") == '/' {
+                                            path.clone()
+                                        } else {
+                                            String::from(&crate::transform::file()[..crate::transform::file().rfind('/').map(|x| x - 1).unwrap_or(0)]) + path
+                                        };
+                                        let tokens = crate::token::parse(crate::transform::read(&path).chars());
+                                        Code::code().remove(it.pos());
+                                        for token in tokens.iter().rev() {
+                                            Code::code().insert(it.pos(), token.clone())
+                                        }
+                                    },
+                                    x => panic!("expected \"...\" or <...>, got {}", x)
                                 },
                                 x => panic!("unknown preprocessor directive: `{}`", x)
                             }
                             Code::code().drain(hashtag_pos..it.pos());
+
                             it.setpos(hashtag_pos)
                         },
                         Token::Newline => (),

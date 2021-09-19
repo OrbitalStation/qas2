@@ -1,7 +1,7 @@
 pub struct Comment {
     pub begin: &'static str,
     pub end: &'static str,
-    pub save_end: bool
+    pub save_end: bool,
 }
 
 pub fn uncomment(code: &mut String, comments: &[Comment]) {

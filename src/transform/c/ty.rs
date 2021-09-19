@@ -1,12 +1,9 @@
-use super::{
-    types::TypeID,
-    Token
-};
+use super::{types::TypeID, Token};
 
 #[derive(Debug, Clone)]
 pub struct Let {
     pub name: String,
-    pub ty: TypeID
+    pub ty: TypeID,
 }
 
 #[derive(Clone)]
@@ -15,7 +12,7 @@ pub struct SmartIter(usize);
 impl Iterator for SmartIter {
     type Item = &'static Token;
 
-    fn next(&mut self) -> Option <Self::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         self.check().map(|x| {
             self.0 += 1;
             x
@@ -39,7 +36,7 @@ impl SmartIter {
         self.0 = pos
     }
 
-    pub fn check(&self) -> Option <<Self as Iterator>::Item> {
+    pub fn check(&self) -> Option<<Self as Iterator>::Item> {
         Code::code().get(self.0)
     }
 }
@@ -47,12 +44,12 @@ impl SmartIter {
 pub struct Code;
 
 impl Code {
-    pub fn set(code: Vec <Token>) {
+    pub fn set(code: Vec<Token>) {
         *Self::code() = code
     }
 
-    pub fn code() -> &'static mut Vec <Token> {
-        static mut CODE: Vec <Token> = Vec::new();
+    pub fn code() -> &'static mut Vec<Token> {
+        static mut CODE: Vec<Token> = Vec::new();
         unsafe { &mut CODE }
     }
 }

@@ -1,4 +1,4 @@
-use super::{Op, Type, Fix, Order};
+use super::{Fix, Op, Order, Type};
 
 macro_rules! init {
     (@binary0 $symbol:tt ($ty:expr) $order:ident $priority:literal $op:expr) => {
